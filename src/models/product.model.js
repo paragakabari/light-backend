@@ -16,6 +16,10 @@ const productSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
+    sellerPrice: {
+      type: Number,
+      required: true,
+    },
     image: {
       type: String,
       required: false,
@@ -28,6 +32,20 @@ const productSchema = mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true
+    },
+    manufacturer: {
+      name: {
+        type: String,
+        required: false,
+      },
+      number: {
+        type: String,
+        required: false,
+      },
+      address: {
+        type: String,
+        required: false,
+      }
     }
   },
   {

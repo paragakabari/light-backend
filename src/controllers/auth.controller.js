@@ -5,6 +5,8 @@ const { password } = require('../validations/custom.validation');
 const { User } = require('../models');
 const ApiError = require('../utils/ApiError');
 const { saveFile } = require('../utils/helper');
+const bcrypt = require('bcryptjs');
+
 
 const register = {
   validation: {
@@ -12,22 +14,25 @@ const register = {
       name: Joi.string().required(),
       email: Joi.string().required().email(),
       password: Joi.string().required().custom(password),
-      role: Joi.string().valid('user', 'admin', 'serviceProvider').default('user'),
+      role: Joi.string().valid('user', 'admin', 'seller').default('user'),
     }),
   },
   handler: async (req, res) => {
     // check if email is already registered
     const user = await User.findOne({ email: req.body.email });
     if (user) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'User already registered');
+      // if user status is approved, throw error
+      if(user.status === 'approved') {
+        throw new ApiError(httpStatus.BAD_REQUEST, 'User already registered');
+      }
     }
 
-    // if role is serviceProvider, check if documentUrl is provided
-    if (req.body.role === "serviceProvider" && !req.files?.documentUrl) {
+    // if role is seller, check if documentUrl is provided
+    if (req.body.role === "seller" && !req.files?.documentUrl) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Document Url is required for service provider');
     }
 
-    if (req.body.role === "serviceProvider") {
+    if (req.body.role === "seller") {
       req.body.status = 'pending';
     }
 
@@ -35,8 +40,15 @@ const register = {
       const { upload_path, file_name } = await saveFile(req.files.documentUrl, 'document');
       req.body.documentUrl = upload_path;
     }
-    // create user
-    const newUser = await new User(req.body).save();
+    req.body.password = await bcrypt.hash(req.body.password, 8);
+    
+    let newUser
+    if(user && user.status === 'rejected' && user.role === 'seller') {
+      newUser = await User.findByIdAndUpdate(user._id, req.body, { new: true });     
+    } else {
+      newUser = await new User(req.body).save();  
+    } 
+    
     const token = await tokenService.generateAuthTokens(newUser);
     return res.status(httpStatus.CREATED).send({ token, user: newUser });
   }

@@ -23,8 +23,16 @@ const sendEmailForStatus = async (to, status) => {
   await sendEmail(to, subject, text);
 };
 
+const sendEmailForForgotPassword = async (to, resetToken) => {
+  const subject = 'Reset Password';
+  const text = `Dear user,
+  Please click on the following link to reset your password: ${config.frontendUrl}/reset-password?token=${resetToken}`;
+  await sendEmail(to, subject, text);
+}
+
 module.exports = {
   transport,
   sendEmail,
-  sendEmailForStatus
+  sendEmailForStatus,
+  sendEmailForForgotPassword,
 };

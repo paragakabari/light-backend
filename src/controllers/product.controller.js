@@ -10,10 +10,15 @@ const createProduct = {
       name: Joi.string().required().trim(),
       description: Joi.string().required(),
       price: Joi.number().required(),
+      sellerPrice: Joi.number().required(),
+      manufacturer: Joi.object().keys({
+        name: Joi.string().optional().trim(),
+        number: Joi.string().optional().trim(),
+        address: Joi.string().optional().trim(),
+      }).optional()
     }),
   },
   handler: catchAsync(async (req, res) => {
-
     const productExist = await Product.findOne({ name: req.body.name });
 
     if (productExist) {
@@ -26,42 +31,23 @@ const createProduct = {
       req.body.image = upload_path;
     }
 
-    const user = await Product.create(req.body);
-    return res.status(httpStatus.CREATED).send(user);
+    const product = await Product.create(req.body);
+    return res.status(httpStatus.CREATED).send(product);
   }),
 };
-
-const getProducts = catchAsync(async (req, res) => {
-
-  // pagination and filtering
-  const { page = 1, limit = 10, search } = req.query;
-
-  const query = {
-    isActive: true,
-    ...(search && { name: { $regex: search, $options: 'i' } })
-  };
-
-  const products = await Product.paginate(query, { page, limit });
-
-  res.send(products);
-});
-
-
-const getProductById = catchAsync(async (req, res) => {
-  const product = await Product.findById(req.params._id);
-  if (!product) {
-    return res.status(httpStatus.NOT_FOUND).send({ message: 'Product not found' });
-  }
-  return res.send(product);
-});
-
 
 const updateProduct = {
   validation: {
     body: Joi.object().keys({
       name: Joi.string().trim(),
       description: Joi.string(),
-      price: Joi.number()
+      price: Joi.number(),
+      sellerPrice: Joi.number(),
+      manufacturer: Joi.object().keys({
+        name: Joi.string().optional().trim(),
+        number: Joi.string().optional().trim(),
+        address: Joi.string().optional().trim(),
+      }).optional()
     }),
   },
   handler: catchAsync(async (req, res) => {
@@ -83,6 +69,50 @@ const updateProduct = {
     return res.send(product);
   }),
 };
+
+
+const getProducts = catchAsync(async (req, res) => {
+  const { page = 1, limit = 10, search } = req.query;
+  const userRole = req.user.role;
+
+  const query = {
+    isActive: true,
+    ...(search && { name: { $regex: search, $options: 'i' } })
+  };
+
+  const products = await Product.paginate(query, { page, limit });
+
+  const productWithPrice = products.docs.map(product => {
+    let productObj = product.toObject();
+    if (userRole === 'seller') {
+      productObj.price = product.sellerPrice;
+    }
+    if (userRole !== 'admin') {
+      delete productObj.manufacturer;
+    }
+    return productObj;
+  });
+
+  res.send({ ...products, docs: productWithPrice });
+});
+
+const getProductById = catchAsync(async (req, res) => {
+  const product = await Product.findById(req.params._id);
+  const userRole = req.user.role;
+  if (!product) {
+    return res.status(httpStatus.NOT_FOUND).send({ message: 'Product not found' });
+  }
+  let productObj = product.toObject();
+  if (userRole === 'seller') {
+    productObj.price = product.sellerPrice;
+  }
+  if (userRole !== 'admin') {
+    delete productObj.manufacturer;
+  }
+  return res.send(productObj);
+});
+
+
 
 const deleteProduct = catchAsync(async (req, res) => {
   const product = await Product.findById(req.params._id);

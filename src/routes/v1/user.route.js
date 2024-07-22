@@ -8,6 +8,8 @@ const router = express.Router();
 
 router.get('/get', auth(), catchAsync(userController.getUser));
 router.put('/update-status/:_id', auth(), validate(userController.updateStatus.validation), catchAsync(userController.updateStatus.handler));
+router.post('/forgot-password', catchAsync(userController.forgotPassword));
+router.post('/reset-password/:token', catchAsync(userController.resetPassword));
 
 
 
