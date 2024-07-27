@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const { toJSON, paginate } = require('./plugins');
+const mongoose = require("mongoose");
+const { toJSON, paginate } = require("./plugins");
 
 const productSchema = mongoose.Schema(
   {
@@ -26,27 +26,26 @@ const productSchema = mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'inactive'],
-      default: 'active',
+      enum: ["active", "inactive"],
+      default: "active",
     },
     isActive: {
       type: Boolean,
-      default: true
+      default: true,
     },
-    manufacturer: {
-      name: {
-        type: String,
-        required: false,
-      },
-      number: {
-        type: String,
-        required: false,
-      },
-      address: {
-        type: String,
-        required: false,
-      }
-    }
+
+    manufacturername: {
+      type: String,
+      required: false,
+    },
+    manufacturernumber: {
+      type: String,
+      required: false,
+    },
+    manufactureraddress: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,
@@ -57,10 +56,9 @@ const productSchema = mongoose.Schema(
 productSchema.plugin(toJSON);
 productSchema.plugin(paginate);
 
-
 /**
  * @typedef Product
  */
-const Product = mongoose.model('Product', productSchema);
+const Product = mongoose.model("Product", productSchema);
 
 module.exports = Product;
