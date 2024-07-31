@@ -9,6 +9,6 @@ const router = express.Router();
 router.post('/add', auth(), catchAsync(cartController.addItemToCart));
 router.get('/', auth(), catchAsync(cartController.getCart));
 router.put('/update', auth(), catchAsync(cartController.updateCartItem));
-router.delete('/delete', auth(), catchAsync(cartController.deleteCartItem));
+router.delete('/delete/:productId', auth(), catchAsync(cartController.deleteCartItem));
 
 module.exports = router;
