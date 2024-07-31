@@ -59,15 +59,15 @@ const updateCartItem = catchAsync(async (req, res) => {
 });
 
 const deleteCartItem = catchAsync(async (req, res) => {
-  const { productId } = req.body;
+  const { productId } = req.params;
   const userId = req.user._id;
 
-  const cart = await Cart.findOne({ userId});
+  const cart = await Cart.findOne({ userId });
   if (!cart) {
     return res.status(httpStatus.NOT_FOUND).send({ message: 'Cart not found' });
   }
 
-  const cartItem = cart.items.find(item => item.productId.toString() === productId);
+  const cartItem = cart.items.find((item) => item.productId.toString() === productId);
   if (cartItem) {
     cart.items.pull(cartItem);
     await cart.save();
