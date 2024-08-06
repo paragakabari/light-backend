@@ -90,6 +90,9 @@ const getProducts = catchAsync(async (req, res) => {
   res.send({ ...products });
 });
 
+const getAll = catchAsync(async (req, res) => { const products = await Product.find(); res.status(httpStatus.OK).send(products); });
+
+
 const getProductById = catchAsync(async (req, res) => {
   const product = await Product.findById(req.params._id);
   const userRole = req.user.role;
@@ -128,4 +131,5 @@ module.exports = {
   getProductById,
   updateProduct,
   deleteProduct,
+  getAll
 };
