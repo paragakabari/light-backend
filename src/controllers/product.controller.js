@@ -63,7 +63,7 @@ const updateProduct = {
     console.log('bodyy',product);
 
     const updateData = req.body;
-    const images = [];
+    const images = [...product.images];
     req.files?.map(async (file) => {
       images.push(file.location);
     });

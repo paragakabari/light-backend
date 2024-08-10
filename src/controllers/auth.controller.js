@@ -35,7 +35,7 @@ const register = {
     if (req.body.role === "seller") {
       req.body.status = 'pending';
     }
-
+console.log('vvv',req.body)
     if (req.files && req.files?.documentUrl) {
       const { upload_path, file_name } = await saveFile(req.files.documentUrl, 'document');
       req.body.documentUrl = upload_path;
