@@ -20,10 +20,12 @@ const productSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
-    image: {
-      type: String,
-      required: false,
-    },
+    images: [
+      {
+        type: String,
+        required: false,
+      }
+    ],
     status: {
       type: String,
       enum: ["active", "inactive"],

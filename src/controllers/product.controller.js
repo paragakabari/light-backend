@@ -2,7 +2,7 @@ const httpStatus = require("http-status");
 const catchAsync = require("../utils/catchAsync");
 const { Product } = require("../models");
 const Joi = require("joi");
-const { saveFile } = require("../utils/helper");
+
 
 const createProduct = {
   validation: {
@@ -17,7 +17,7 @@ const createProduct = {
     }),
   },
   handler: catchAsync(async (req, res) => {
-    console.log("---", req);
+    console.log("bodyyyy  ---", req.files);
     const productExist = await Product.findOne({ name: req.body.name });
 
     if (productExist) {
@@ -25,12 +25,15 @@ const createProduct = {
         .status(httpStatus.BAD_REQUEST)
         .send({ message: "Product already exist" });
     }
+    const images = [];
+    req.files?.map(async (file) => {
+      images.push(file.location);
+    });
+    console.log("imagesss", images);
 
-    // save image
-    if (req.files?.image) {
-      const { upload_path } = await saveFile(req.files.image, "product");
-      req.body.image = upload_path;
-    }
+    req.body.images = images;
+
+    
     console.log("body-----", req.body);
     const product = await Product.create(req.body);
     return res.status(httpStatus.CREATED).send(product);
@@ -56,21 +59,20 @@ const updateProduct = {
         .status(httpStatus.NOT_FOUND)
         .send({ message: "Product not found" });
     }
+    console.log('bodyy',req.body);
+    console.log('bodyy',product);
 
-    if (req.body?.name) {
-      const productExist = await Product.findOne({
-        name: req.body.name,
-        _id: { $ne: req.params._id },
-      });
-      if (productExist) {
-        return res
-          .status(httpStatus.BAD_REQUEST)
-          .send({ message: "Product already exist" });
-      }
-    }
+    const updateData = req.body;
+    const images = [];
+    req.files?.map(async (file) => {
+      images.push(file.location);
+    });
+    updateData.images = images;
 
-    Object.assign(product, req.body);
+    // update product data
+    Object.assign(product, updateData);
     await product.save();
+
 
     return res.send(product);
   }),
@@ -112,17 +114,16 @@ const getProductById = catchAsync(async (req, res) => {
 });
 
 const deleteProduct = catchAsync(async (req, res) => {
+
+
+
   const product = await Product.findById(req.params._id);
   if (!product) {
-    return res
-      .status(httpStatus.NOT_FOUND)
-      .send({ message: "Product not found" });
+    return res.status(httpStatus.NOT_FOUND).send({ message: 'product not found' });
   }
 
-  product.isActive = false;
-  await product.save();
-
-  return res.send({ message: "Product deleted successfully" });
+  await product.remove();
+  return res.send({ message: 'product deleted successfully' });
 });
 
 module.exports = {

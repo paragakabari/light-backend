@@ -13,8 +13,10 @@ const { authLimiter } = require('./middlewares/rateLimiter');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utils/ApiError');
-const uploader = require('express-fileupload');
+// const uploader = require('express-fileupload');
 const path = require('path');
+const bodyParser = require("body-parser");
+
 
 const app = express();
 
@@ -39,14 +41,18 @@ app.use(mongoSanitize());
 // gzip compression
 app.use(compression());
 
+// app.use(uploader({ useTempFiles: true }));
+
 // enable cors
 app.use(cors());
 app.options('*', cors());
 
 
 app.use(express.static(path.resolve("./public")));
-app.use(uploader({ createParentPath: true }));
+// app.use(uploader({ createParentPath: true }));
 
+app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(bodyParser.json());
 
 // jwt authentication
 app.use(passport.initialize());
