@@ -18,6 +18,8 @@ const register = {
     }),
   },
   handler: async (req, res) => {
+    console.log('rrrr',req.files);
+    
     // check if email is already registered
     const user = await User.findOne({ email: req.body.email });
     if (user) {
@@ -28,24 +30,27 @@ const register = {
     }
 
     // if role is seller, check if documentUrl is provided
-    if (req.body.role === "seller" && !req.files?.documentUrl) {
+    if (req.body.role === "seller" && !req.files[0]?.location) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Document Url is required for service provider');
     }
 
     if (req.body.role === "seller") {
       req.body.status = 'pending';
+    req.body.documentUrl = req.files[0]?.location;
+
     }
-console.log('vvv',req.body)
-    if (req.files && req.files?.documentUrl) {
-      const { upload_path, file_name } = await saveFile(req.files.documentUrl, 'document');
-      req.body.documentUrl = upload_path;
-    }
+
+   
     req.body.password = await bcrypt.hash(req.body.password, 8);
     
     let newUser
     if(user && user.status === 'rejected' && user.role === 'seller') {
+console.log('update',req.body);
+
       newUser = await User.findByIdAndUpdate(user._id, req.body, { new: true });     
     } else {
+console.log('rrrr',req.body);
+
       newUser = await new User(req.body).save();  
     } 
     
