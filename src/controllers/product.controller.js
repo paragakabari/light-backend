@@ -10,10 +10,11 @@ const createProduct = {
       name: Joi.string().required().trim(),
       description: Joi.string().required(),
       price: Joi.number().required(),
-      sellerPrice: Joi.number().required(),
+      dealerPrice: Joi.number().required(),
       manufacturername: Joi.string().optional().trim(),
       manufacturernumber: Joi.string().optional().trim(),
       manufactureraddress: Joi.string().optional().trim(),
+      category: Joi.string().required(),
     }),
   },
   handler: catchAsync(async (req, res) => {
@@ -46,10 +47,11 @@ const updateProduct = {
       name: Joi.string().trim(),
       description: Joi.string(),
       price: Joi.number(),
-      sellerPrice: Joi.number(),
+      dealerPrice: Joi.number(),
       manufacturername: Joi.string().optional().trim(),
       manufacturernumber: Joi.string().optional().trim(),
       manufactureraddress: Joi.string().optional().trim(),
+      category: Joi.string(),
     }),
   },
   handler: catchAsync(async (req, res) => {
@@ -84,10 +86,14 @@ const getProducts = catchAsync(async (req, res) => {
 
   const query = {
     isActive: true,
+
     ...(search && { name: { $regex: search, $options: "i" } }),
   };
 
-  const products = await Product.paginate(query, { page, limit });
+  const products = await Product.paginate(query, { page, limit }).populate(
+    "category"
+  );
+
 
   res.send({ ...products });
 });
@@ -104,8 +110,8 @@ const getProductById = catchAsync(async (req, res) => {
       .send({ message: "Product not found" });
   }
   let productObj = product.toObject();
-  if (userRole === "seller") {
-    productObj.price = product.sellerPrice;
+  if (userRole === "dealer") {
+    productObj.price = product.dealerPrice;
   }
   if (userRole !== "admin") {
     delete productObj.manufacturer;

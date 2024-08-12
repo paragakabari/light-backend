@@ -36,6 +36,16 @@ const getCart = catchAsync(async (req, res) => {
   return res.send(cart);
 });
 
+
+const getAllCart = catchAsync(async (req, res) => {
+  const carts = await Cart.find().populate('items.productId');
+  if (!carts) {
+    return res.status(httpStatus.NOT_FOUND).send({ message: 'Cart not found' });
+  }
+  return res.send(carts);
+}
+);
+
 const updateCartItem = catchAsync(async (req, res) => {
   const { productId, quantity } = req.body;
   const userId = req.user._id;
@@ -82,4 +92,5 @@ module.exports = {
   getCart,
   updateCartItem,
   deleteCartItem,
+  getAllCart
 };

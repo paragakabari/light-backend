@@ -14,7 +14,7 @@ const register = {
       name: Joi.string().required(),
       email: Joi.string().required().email(),
       password: Joi.string().required().custom(password),
-      role: Joi.string().valid('user', 'admin', 'seller').default('user'),
+      role: Joi.string().valid('user', 'admin', 'dealer').default('user'),
     }),
   },
   handler: async (req, res) => {
@@ -29,12 +29,12 @@ const register = {
       }
     }
 
-    // if role is seller, check if documentUrl is provided
-    if (req.body.role === "seller" && !req.files[0]?.location) {
+    // if role is dealer, check if documentUrl is provided
+    if (req.body.role === "dealer" && !req.files[0]?.location) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Document Url is required for service provider');
     }
 
-    if (req.body.role === "seller") {
+    if (req.body.role === "dealer") {
       req.body.status = 'pending';
     req.body.documentUrl = req.files[0]?.location;
 
@@ -44,7 +44,7 @@ const register = {
     req.body.password = await bcrypt.hash(req.body.password, 8);
     
     let newUser
-    if(user && user.status === 'rejected' && user.role === 'seller') {
+    if(user && user.status === 'rejected' && user.role === 'dealer') {
 console.log('update',req.body);
 
       newUser = await User.findByIdAndUpdate(user._id, req.body, { new: true });     

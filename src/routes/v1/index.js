@@ -4,7 +4,8 @@ const userRoute = require('./user.route');
 const productRoute = require('./product.route');
 const cartRoute = require('./cart.route');
 const contactRoute = require('./contact.route');
-
+const categoryRoute = require('./category.route');
+const branchRoute = require('./branch.route');
 const router = express.Router();
 
 const defaultRoutes = [
@@ -27,6 +28,14 @@ const defaultRoutes = [
   {
     path:'/contact',
     route:contactRoute
+  },
+  {
+    path: '/categories',
+    route: categoryRoute,
+  },
+  {
+    path: '/branches',
+    route: branchRoute,
   }
 ];
 

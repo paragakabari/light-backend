@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.post('/add', auth(), catchAsync(cartController.addItemToCart));
 router.get('/', auth(), catchAsync(cartController.getCart));
+router.get('/getAll', auth(), catchAsync(cartController.getAllCart));
 router.put('/update', auth(), catchAsync(cartController.updateCartItem));
 router.delete('/delete/:productId', auth(), catchAsync(cartController.deleteCartItem));
 

@@ -16,7 +16,7 @@ const productSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
-    sellerPrice: {
+    dealerPrice: {
       type: Number,
       required: true,
     },
@@ -35,6 +35,10 @@ const productSchema = mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    minimumOrderQuantity: {
+      type: Number,
+      required: false,
+    },
 
     manufacturername: {
       type: String,
@@ -47,6 +51,15 @@ const productSchema = mongoose.Schema(
     manufactureraddress: {
       type: String,
       required: false,
+    },
+    purchasePrice: {
+      type: String,
+      required: false,
+    },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
     },
   },
   {
