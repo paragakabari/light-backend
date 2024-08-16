@@ -1,8 +1,36 @@
 const httpStatus = require("http-status");
 const catchAsync = require("../utils/catchAsync");
-const { Product } = require("../models");
+const { Product, Category } = require("../models");
 const Joi = require("joi");
+// const { model } = require("mongoose");
+const mongoose = require('mongoose');
+// const ObjectId = mongoose.Types.ObjectId;
+const getProdsuctsByCategory = catchAsync(async (req, res) => {
+  const { categoryId, page = 0, limit = 10, search } = req.query;
 
+  let query = {
+    
+    ...(search && { name: { $regex: search, $options: "i" } }), // Allow search within the category
+  };
+  if (categoryId) {
+    query.category = new mongoose.Types.ObjectId(categoryId);
+  } 
+console.log('queryy',query);
+
+
+  // Perform pagination
+  const paginatedResult = await Product.find(query).skip(page).limit(limit).populate({
+    path: "category",
+    model: "Category",
+  })
+
+
+
+  // Manually assign the populated documents back to the paginated result
+  // paginatedResult.docs = productsWithCategory;
+
+  res.send({ ...paginatedResult });
+});
 
 const createProduct = {
   validation: {
@@ -14,28 +42,33 @@ const createProduct = {
       manufacturername: Joi.string().optional().trim(),
       manufacturernumber: Joi.string().optional().trim(),
       manufactureraddress: Joi.string().optional().trim(),
-      category: Joi.string().required(),
+      category: Joi.string().required(), // Category is required
     }),
   },
   handler: catchAsync(async (req, res) => {
-    console.log("bodyyyy  ---", req.files);
     const productExist = await Product.findOne({ name: req.body.name });
 
     if (productExist) {
       return res
         .status(httpStatus.BAD_REQUEST)
-        .send({ message: "Product already exist" });
+        .send({ message: "Product already exists" });
     }
+
     const images = [];
-    req.files?.map(async (file) => {
+    req.files?.map((file) => {
       images.push(file.location);
     });
-    console.log("imagesss", images);
 
     req.body.images = images;
+    console.log(req.body);
+    // Ensure the category exists
+    const category = await Category.findById(req.body.category);
+    if (!category) {
+      return res
+        .status(httpStatus.NOT_FOUND)
+        .send({ message: "Category not found" });
+    }
 
-    
-    console.log("body-----", req.body);
     const product = await Product.create(req.body);
     return res.status(httpStatus.CREATED).send(product);
   }),
@@ -51,7 +84,7 @@ const updateProduct = {
       manufacturername: Joi.string().optional().trim(),
       manufacturernumber: Joi.string().optional().trim(),
       manufactureraddress: Joi.string().optional().trim(),
-      category: Joi.string(),
+      category: Joi.string(), // Optional for updates
     }),
   },
   handler: catchAsync(async (req, res) => {
@@ -61,20 +94,26 @@ const updateProduct = {
         .status(httpStatus.NOT_FOUND)
         .send({ message: "Product not found" });
     }
-    console.log('bodyy',req.body);
-    console.log('bodyy',product);
 
     const updateData = req.body;
     const images = [...product.images];
-    req.files?.map(async (file) => {
+    req.files?.map((file) => {
       images.push(file.location);
     });
     updateData.images = images;
 
-    // update product data
+    // Ensure the category exists if it's being updated
+    if (updateData.category) {
+      const category = await Category.findById(updateData.category);
+      if (!category) {
+        return res
+          .status(httpStatus.NOT_FOUND)
+          .send({ message: "Category not found" });
+      }
+    }
+
     Object.assign(product, updateData);
     await product.save();
-
 
     return res.send(product);
   }),
@@ -82,24 +121,36 @@ const updateProduct = {
 
 const getProducts = catchAsync(async (req, res) => {
   const { page = 1, limit = 10, search } = req.query;
-  const userRole = req.user.role;
 
   const query = {
     isActive: true,
-
     ...(search && { name: { $regex: search, $options: "i" } }),
   };
 
-  const products = await Product.paginate(query, { page, limit }).populate(
-    "category"
-  );
+  // Perform pagination
+  // const paginatedResult = await Product.paginate(query, { page, limit });
 
+  // // Populate the categories in the paginated documents
+  // const productsWithCategory = await Category.populate(paginatedResult.docs, {
+  //   path: "Category",
+  //   select: "name",
+  // });
 
-  res.send({ ...products });
+  // Manually assign the populated documents back to the paginated result
+  // paginatedResult.docs = productsWithCategory;
+  const paginatedResult = await Product.find(query).skip(page).limit(limit).populate({
+    select: "name",
+    path: "category",
+    model: "Category",
+  })
+
+  res.send({ ...paginatedResult });
 });
 
-const getAll = catchAsync(async (req, res) => { const products = await Product.find(); res.status(httpStatus.OK).send(products); });
-
+const getAll = catchAsync(async (req, res) => {
+  const products = await Product.find();
+  res.status(httpStatus.OK).send(products);
+});
 
 const getProductById = catchAsync(async (req, res) => {
   const product = await Product.findById(req.params._id);
@@ -120,16 +171,15 @@ const getProductById = catchAsync(async (req, res) => {
 });
 
 const deleteProduct = catchAsync(async (req, res) => {
-
-
-
   const product = await Product.findById(req.params._id);
   if (!product) {
-    return res.status(httpStatus.NOT_FOUND).send({ message: 'product not found' });
+    return res
+      .status(httpStatus.NOT_FOUND)
+      .send({ message: "product not found" });
   }
 
   await product.remove();
-  return res.send({ message: 'product deleted successfully' });
+  return res.send({ message: "product deleted successfully" });
 });
 
 module.exports = {
@@ -138,5 +188,6 @@ module.exports = {
   getProductById,
   updateProduct,
   deleteProduct,
-  getAll
+  getAll,
+  getProdsuctsByCategory, // New Function Export
 };

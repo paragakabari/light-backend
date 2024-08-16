@@ -1,6 +1,6 @@
-const httpStatus = require('http-status');
-const { Cart, Product } = require('../models');
-const catchAsync = require('../utils/catchAsync');
+const httpStatus = require("http-status");
+const { Cart, Product } = require("../models");
+const catchAsync = require("../utils/catchAsync");
 
 const addItemToCart = catchAsync(async (req, res) => {
   const { productId, quantity } = req.body;
@@ -8,15 +8,19 @@ const addItemToCart = catchAsync(async (req, res) => {
 
   const product = await Product.findById(productId);
   if (!product) {
-    return res.status(httpStatus.NOT_FOUND).send({ message: 'Product not found' });
+    return res
+      .status(httpStatus.NOT_FOUND)
+      .send({ message: "Product not found" });
   }
 
-  let cart = await Cart.findOne( { userId});
+  let cart = await Cart.findOne({ userId });
   if (!cart) {
     cart = new Cart({ userId, items: [] });
   }
 
-  const cartItem = cart.items.find(item => item.productId.toString() === productId);
+  const cartItem = cart.items.find(
+    (item) => item.productId.toString() === productId
+  );
   if (cartItem) {
     cartItem.quantity += quantity;
   } else {
@@ -29,33 +33,42 @@ const addItemToCart = catchAsync(async (req, res) => {
 
 const getCart = catchAsync(async (req, res) => {
   const userId = req.user._id;
-  const cart = await Cart.findOne({ userId }).populate('items.productId');
+  const cart = await Cart.findOne({ userId }).populate({
+    path: "items.productId",
+    // select: 'name price',
+    model: "Product",
+  });
+
   if (!cart) {
-    return res.status(httpStatus.NOT_FOUND).send({ message: 'Cart not found' });
+    return res.status(httpStatus.NOT_FOUND).send({ message: "Cart not found" });
   }
   return res.send(cart);
 });
 
-
 const getAllCart = catchAsync(async (req, res) => {
-  const carts = await Cart.find().populate('items.productId');
+  const carts = await Cart.find().populate({
+    path: "items.productId",
+    // select: 'name price',
+    model: "Product",
+  });
   if (!carts) {
-    return res.status(httpStatus.NOT_FOUND).send({ message: 'Cart not found' });
+    return res.status(httpStatus.NOT_FOUND).send({ message: "Cart not found" });
   }
   return res.send(carts);
-}
-);
+});
 
 const updateCartItem = catchAsync(async (req, res) => {
   const { productId, quantity } = req.body;
   const userId = req.user._id;
 
-  const cart = await Cart.findOne({ userId});
+  const cart = await Cart.findOne({ userId });
   if (!cart) {
-    return res.status(httpStatus.NOT_FOUND).send({ message: 'Cart not found' });
+    return res.status(httpStatus.NOT_FOUND).send({ message: "Cart not found" });
   }
 
-  const cartItem = cart.items.find(item => item.productId.toString() === productId);
+  const cartItem = cart.items.find(
+    (item) => item.productId.toString() === productId
+  );
   if (cartItem) {
     cartItem.quantity = quantity;
     if (cartItem.quantity <= 0) {
@@ -65,7 +78,9 @@ const updateCartItem = catchAsync(async (req, res) => {
     return res.send(cart);
   }
 
-  return res.status(httpStatus.NOT_FOUND).send({ message: 'Item not found in cart' });
+  return res
+    .status(httpStatus.NOT_FOUND)
+    .send({ message: "Item not found in cart" });
 });
 
 const deleteCartItem = catchAsync(async (req, res) => {
@@ -74,17 +89,21 @@ const deleteCartItem = catchAsync(async (req, res) => {
 
   const cart = await Cart.findOne({ userId });
   if (!cart) {
-    return res.status(httpStatus.NOT_FOUND).send({ message: 'Cart not found' });
+    return res.status(httpStatus.NOT_FOUND).send({ message: "Cart not found" });
   }
 
-  const cartItem = cart.items.find((item) => item.productId.toString() === productId);
+  const cartItem = cart.items.find(
+    (item) => item.productId.toString() === productId
+  );
   if (cartItem) {
     cart.items.pull(cartItem);
     await cart.save();
     return res.send(cart);
   }
 
-  return res.status(httpStatus.NOT_FOUND).send({ message: 'Item not found in cart' });
+  return res
+    .status(httpStatus.NOT_FOUND)
+    .send({ message: "Item not found in cart" });
 });
 
 module.exports = {
@@ -92,5 +111,5 @@ module.exports = {
   getCart,
   updateCartItem,
   deleteCartItem,
-  getAllCart
+  getAllCart,
 };
