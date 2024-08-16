@@ -19,15 +19,32 @@ console.log('queryy',query);
 
 
   // Perform pagination
-  const paginatedResult = await Product.find(query).skip(page).limit(limit).populate({
+  // const paginatedResult = await Product.find(query).skip(page).limit(limit).populate({
+  //   path: "category",
+  //   model: "Category",
+  // })
+
+
+
+  // res.send({ ...paginatedResult });
+
+
+  const paginatedResult = await Product.paginate(query, { page, limit });
+
+  // // Populate the categories in the paginated documents
+  const productsWithCategory = await Category.populate(paginatedResult.docs, {
     path: "category",
+    select: "name",
     model: "Category",
-  })
-
-
+  });
 
   // Manually assign the populated documents back to the paginated result
-  // paginatedResult.docs = productsWithCategory;
+  paginatedResult.docs = productsWithCategory;
+  // const paginatedResult = await Product.find(query).skip(page).limit(limit).populate({
+  //   select: "name",
+  //   path: "category",
+  //   model: "Category",
+  // })
 
   res.send({ ...paginatedResult });
 });
@@ -71,6 +88,10 @@ const createProduct = {
 
     const product = await Product.create(req.body);
     return res.status(httpStatus.CREATED).send(product);
+
+
+
+    
   }),
 };
 
@@ -128,21 +149,22 @@ const getProducts = catchAsync(async (req, res) => {
   };
 
   // Perform pagination
-  // const paginatedResult = await Product.paginate(query, { page, limit });
+  const paginatedResult = await Product.paginate(query, { page, limit });
 
   // // Populate the categories in the paginated documents
-  // const productsWithCategory = await Category.populate(paginatedResult.docs, {
-  //   path: "Category",
-  //   select: "name",
-  // });
+  const productsWithCategory = await Category.populate(paginatedResult.docs, {
+    path: "category",
+    select: "name",
+    model: "Category",
+  });
 
   // Manually assign the populated documents back to the paginated result
-  // paginatedResult.docs = productsWithCategory;
-  const paginatedResult = await Product.find(query).skip(page).limit(limit).populate({
-    select: "name",
-    path: "category",
-    model: "Category",
-  })
+  paginatedResult.docs = productsWithCategory;
+  // const paginatedResult = await Product.find(query).skip(page).limit(limit).populate({
+  //   select: "name",
+  //   path: "category",
+  //   model: "Category",
+  // })
 
   res.send({ ...paginatedResult });
 });
