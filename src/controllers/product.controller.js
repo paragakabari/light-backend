@@ -18,6 +18,8 @@ const getProdsuctsByCategory = catchAsync(async (req, res) => {
 console.log('queryy',query);
 
 
+
+
   // Perform pagination
   // const paginatedResult = await Product.find(query).skip(page).limit(limit).populate({
   //   path: "category",
