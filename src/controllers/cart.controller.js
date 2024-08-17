@@ -46,11 +46,9 @@ const getCart = catchAsync(async (req, res) => {
 });
 
 const getAllCart = catchAsync(async (req, res) => {
-  const carts = await Cart.find().populate({
-    path: "items.productId",
-    // select: 'name price',
-    model: "Product",
-  });
+  const carts = await Cart.find()
+    .populate("userId")
+    .populate("items.productId");
   if (!carts) {
     return res.status(httpStatus.NOT_FOUND).send({ message: "Cart not found" });
   }
