@@ -15,6 +15,8 @@ const register = {
       email: Joi.string().required().email(),
       password: Joi.string().required().custom(password),
       role: Joi.string().valid('user', 'admin', 'dealer').default('user'),
+      // phone number is required and and 10 digit number
+      phone: Joi.string().required().pattern(new RegExp('^[0-9]{10}$')),
     }),
   },
   handler: async (req, res) => {
@@ -39,6 +41,14 @@ const register = {
     req.body.documentUrl = req.files[0]?.location;
 
     }
+
+    // phone number is required and and 10 digit number and unique in db
+    const phone = await User
+      .findOne({ phone: req.body.phone });
+    if (phone) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Phone number already registered');
+    }
+    
 
    
     req.body.password = await bcrypt.hash(req.body.password, 8);

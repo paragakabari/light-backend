@@ -46,6 +46,11 @@ const userSchema = mongoose.Schema(
     documentUrl: {
       type: String,
     },
+    phone: {
+      type: String,
+      required: true,
+    },
+
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
