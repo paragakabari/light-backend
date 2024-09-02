@@ -26,12 +26,10 @@ const profileUploadS3 = multer({
       acl: "public-read", 
       contentType: multerS3.AUTO_CONTENT_TYPE,
       metadata: function (_req, file, cb) {
-        console.log("file.fieldname", file.fieldname);
         
         cb(null, { fieldName: file.fieldname });
       },
       key: function (req, file, cb) {
-        console.log("---- key ----");
         
         req.body = JSON.parse(JSON.stringify(req.body));
         cb(

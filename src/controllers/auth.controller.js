@@ -20,7 +20,6 @@ const register = {
     }),
   },
   handler: async (req, res) => {
-    console.log('rrrr',req.files);
     
     // check if email is already registered
     const user = await User.findOne({ email: req.body.email });
@@ -55,11 +54,9 @@ const register = {
     
     let newUser
     if(user && user.status === 'rejected' && user.role === 'dealer') {
-console.log('update',req.body);
 
       newUser = await User.findByIdAndUpdate(user._id, req.body, { new: true });     
     } else {
-console.log('rrrr',req.body);
 
       newUser = await new User(req.body).save();  
     } 

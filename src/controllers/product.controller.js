@@ -15,7 +15,6 @@ const getProdsuctsByCategory = catchAsync(async (req, res) => {
   if (categoryId) {
     query.category = new mongoose.Types.ObjectId(categoryId);
   } 
-console.log('queryy',query);
 
 
 
@@ -66,7 +65,6 @@ const createProduct = {
     });
 
     req.body.images = images;
-    console.log(req.body);
     // Ensure the category exists
     const category = await Category.findById(req.body.category);
     if (!category) {
