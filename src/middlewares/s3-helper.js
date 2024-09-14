@@ -62,7 +62,7 @@ const profileUploadS3 = multer({
       // ],
     }),
     limits: {
-      fileSize: 1024 * 1024 * 2, // we are allowing only 2 MB files
+      fileSize: 1024 * 1024 * 5, // we are allowing only 2 MB files
     },
   });
 

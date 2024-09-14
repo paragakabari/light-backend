@@ -6,7 +6,7 @@ const { productController } = require('../../controllers');
 const {  profileUploadS3, deleteImage } = require('../../middlewares/s3-helper');
 
 const router = express.Router();
-const uploadImage = profileUploadS3.array("images", 5);
+const uploadImage = profileUploadS3.array("images", 15);
 // auth(), validate(productController.createProduct.validation)
 router.post('/create',auth(), uploadImage,validate(productController.createProduct.validation), catchAsync(productController.createProduct.handler));
 router.get('/get', auth(), catchAsync(productController.getProducts));
