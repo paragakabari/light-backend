@@ -1,7 +1,7 @@
 // controllers/categoryController.js
 const httpStatus = require("http-status");
 const catchAsync = require("../utils/catchAsync");
-const { Category } = require("../models");
+const { Category, Access } = require("../models");
 const Joi = require("joi");
 
 const createCategory = {
@@ -58,9 +58,67 @@ const getCategoryById = catchAsync(async (req, res) => {
 });
 
 const getCategories = catchAsync(async (req, res) => {
-  const categories = await Category.find();
+  let query = {};
+
+  // Check if req.user exists
+  if (req.user) {
+    let userRole = req.user;
+
+    // Fetch access data for the user based on the role
+    const accessData = await Access.find({ userId: userRole.id })
+      .select("categoryId")
+      .then((access) => access.map((a) => a.categoryId));
+
+    // If the user is a dealer, filter categories based on access permissions
+    if (userRole.role === "dealer") {
+      query._id = { $in: accessData };  // Only fetch categories the dealer has access to
+    }
+  }
+
+  // Fetch categories based on the query (if no user, it fetches all)
+  const categories = await Category.find(query);
+
+  // Send the response with the fetched categories
   res.status(httpStatus.OK).send(categories);
 });
+
+
+
+const getCategoriesWithAccessStatus = catchAsync(async (req, res) => {
+  let query = {};
+  let categoriesWithAccessStatus = [];
+
+  // Get userId from query or use req.user if available
+  let { userId } = req.params;
+  console.log(userId);
+  if (req.user) {
+    userId = req.user.id;
+  }
+
+  // Fetch access data for the user
+  const accessData = await Access.find({ userId })
+    .select("categoryId")
+    .then((access) => access.map((a) => a.categoryId.toString()));  // Store access data as string IDs
+
+  // Fetch all categories
+  const categories = await Category.find(query);
+
+  // Add `hasAccess: true` if the user has access, otherwise `hasAccess: false`
+  categoriesWithAccessStatus = categories.map((category) => {
+    const hasAccess = accessData.includes(category._id.toString());  // Check if category is in accessData
+    return {
+      ...category.toObject(),
+      hasAccess,  // Set hasAccess to true or false
+    };
+  });
+
+  // Send the response with the fetched categories and access status
+  res.status(httpStatus.OK).send(categoriesWithAccessStatus);
+});
+
+
+
+
 
 const deleteCategory = catchAsync(async (req, res) => {
   const category = await Category.findById(req.params._id);
@@ -78,4 +136,5 @@ module.exports = {
   getCategoryById,
   updateCategory,
   deleteCategory,
+  getCategoriesWithAccessStatus
 };

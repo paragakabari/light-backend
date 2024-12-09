@@ -1,6 +1,6 @@
 const httpStatus = require("http-status");
 const catchAsync = require("../utils/catchAsync");
-const { Product, Category } = require("../models");
+const { Product, Category, Access } = require("../models");
 const Joi = require("joi");
 // const { model } = require("mongoose");
 const mongoose = require('mongoose');
@@ -15,24 +15,7 @@ const getProdsuctsByCategory = catchAsync(async (req, res) => {
   if (categoryId) {
     query.category = new mongoose.Types.ObjectId(categoryId);
   } 
-
-
-
-
-  // Perform pagination
-  // const paginatedResult = await Product.find(query).skip(page).limit(limit).populate({
-  //   path: "category",
-  //   model: "Category",
-  // })
-
-
-
-  // res.send({ ...paginatedResult });
-
-
   const paginatedResult = await Product.paginate(query, { page, limit, populate: "category" }); 
-
-
 
   res.send({ ...paginatedResult });
 });
@@ -129,32 +112,53 @@ const updateProduct = {
 
 const getProducts = catchAsync(async (req, res) => {
   const { page = 1, limit = 10, search } = req.query;
+  let userRole = req.user;
 
-  const query = {
+  // Fetch access data for the user based on the role
+  const accessData = await Access.find({ userId: userRole.id })
+    .select("categoryId")
+    .then((access) => access.map((a) => a.categoryId));
+
+  console.log(accessData);
+
+  // Base query: isActive products
+  let query = {
     isActive: true,
-    ...(search && { name: { $regex: search, $options: "i" } }),
+    ...(search && { name: { $regex: search, $options: "i" } }), // Search functionality
   };
 
-  // Perform pagination
-  const paginatedResult = await Product.paginate(query, { page, limit });
+  // If the user is a dealer, filter products based on category access
+  if (userRole.role === "dealer" || userRole.role === "seller") {
+    query.categoryId = { $in: accessData };
+  }
 
-  // // Populate the categories in the paginated documents
+  // Determine the fields to select based on the user role
+  let selectFields = "-__v";  // Exclude `__v` by default
+  if (userRole.role === "user") {
+    selectFields += " -dealerPrice";  // Exclude dealerPrice for users
+  }
+
+  // Perform pagination
+  const paginatedResult = await Product.paginate(query, {
+    page,
+    limit,
+    select: selectFields,  // Select fields based on user role
+  });
+
+  // Populate the categories in the paginated documents
   const productsWithCategory = await Category.populate(paginatedResult.docs, {
     path: "category",
     select: "name",
     model: "Category",
   });
 
-  // Manually assign the populated documents back to the paginated result
+  // Assign the populated products back to the paginated result
   paginatedResult.docs = productsWithCategory;
-  // const paginatedResult = await Product.find(query).skip(page).limit(limit).populate({
-  //   select: "name",
-  //   path: "category",
-  //   model: "Category",
-  // })
 
-  res.send({ ...paginatedResult });
+  // Send the response with the paginated and populated data
+  res.status(httpStatus.OK).send({ ...paginatedResult });
 });
+
 
 const getAll = catchAsync(async (req, res) => {
   const products = await Product.find();

@@ -18,19 +18,26 @@ const getUser = catchAsync(async (req, res) => {
 });
 
 const updateStatus = {
-  validation: {
-    body: Joi.object().keys({
-      status: Joi.string().required().valid('approved', 'rejected')
-    }),
-  },
+  // validation: {
+  //   body: Joi.object().keys({
+  //     status: Joi.string().required().valid('approved', 'rejected')
+  //   }),
+  // },
   handler: catchAsync(async (req, res) => {
     const user = await User.findById(req.params._id);
+
+
+    console.log(user,"111111111")
 
     if (!user) {
       throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
     }
-    Object.assign(user, req.body);
-    await user.save();
+  
+    user.status = req.body.status;
+
+
+
+    console.log(req.body.status,"111111111")
 
     // send email to user
     if (req.body.status === 'approved') {
@@ -42,7 +49,7 @@ const updateStatus = {
     }
 
 
-    return res.send(user);
+    return res.send(user.save());
   }),
 };
 

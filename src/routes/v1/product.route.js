@@ -15,7 +15,7 @@ router.get('/get/:_id', auth(), catchAsync(productController.getProductById));
 router.put('/update/:_id', uploadImage,auth(),validate(productController.updateProduct.validation), catchAsync(productController.updateProduct.handler));
 router.delete('/delete/:_id',auth(), catchAsync(productController.deleteProduct));
 
-router.get("/search",auth(),catchAsync(productController.getProdsuctsByCategory));
+router.get("/search",catchAsync(productController.getProdsuctsByCategory));
 
 
 

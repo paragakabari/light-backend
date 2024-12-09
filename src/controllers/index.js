@@ -5,3 +5,4 @@ module.exports.cartController = require('./cart.controller');
 module.exports.contactController = require('./contact.controller');
 module.exports.categoryController = require('./category.controller');
 module.exports.branchController = require('./branch.controoler');
+module.exports.accessController = require('./access.controller');

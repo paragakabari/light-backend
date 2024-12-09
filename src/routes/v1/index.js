@@ -6,6 +6,7 @@ const cartRoute = require('./cart.route');
 const contactRoute = require('./contact.route');
 const categoryRoute = require('./category.route');
 const branchRoute = require('./branch.route');
+const accessRoute = require('./access.route');
 const router = express.Router();
 
 const defaultRoutes = [
@@ -36,6 +37,10 @@ const defaultRoutes = [
   {
     path: '/branches',
     route: branchRoute,
+  },
+  {
+    path: '/access',
+    route: accessRoute,
   }
 ];
 
