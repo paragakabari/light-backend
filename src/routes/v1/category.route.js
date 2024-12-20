@@ -13,5 +13,5 @@ router.get('/getAll', oauth(), catchAsync(categoryController.getCategories));
 router.get('/get/:_id', auth(), catchAsync(categoryController.getCategoryById));
 router.put('/update/:_id', auth(), validate(categoryController.updateCategory.validation), catchAsync(categoryController.updateCategory.handler));
 router.delete('/delete/:_id', auth(), catchAsync(categoryController.deleteCategory));
-router.get('/addAccess/:userId', auth(), catchAsync(categoryController.getCategoriesWithAccessStatus));
+router.get('/addAccess', auth(), catchAsync(categoryController.getCategoriesWithAccessStatus));
 module.exports = router;

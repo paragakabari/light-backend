@@ -13,41 +13,37 @@ const createAccess = {
   },
   handler: catchAsync(async (req, res) => {
     const { categoryId, userId } = req.body;
-console.log(categoryId,userId)
-    // Check if any of the categoryId already exists for the user
-    const existingAccesses = await Access.find({
-      categoryId: { $in: categoryId },
-      userId: userId,
-    });
-
-    const existingCategoryId = existingAccesses.map((access) => access.categoryId);
-
-    // Filter out categoryId that don't already have access
-    const newCategoryId = categoryId.filter(
-      (categoryId) => !existingCategoryId.includes(categoryId)
-    );
-
-    if (newCategoryId.length === 0) {
-      return res.status(httpStatus.BAD_REQUEST).json({
-        message: "Access already exists for all provided category IDs.",
+  
+    // Step 1: If categoryId is empty, send a positive response but still remove existing categories
+    if (!categoryId || categoryId.length === 0) {
+      await Access.deleteMany({ userId: userId });
+  
+      return res.status(httpStatus.OK).json({
+        message: "No categories selected, but all previous categories have been removed.",
       });
     }
-
-    // Create new access records for the remaining categoryId
-    const accessPromises = newCategoryId.map((categoryId) => {
+  
+    // Step 2: If categoryId is not empty, remove all existing categories first
+    await Access.deleteMany({ userId: userId });
+  
+    // Step 3: Create new access records for the provided categoryIds
+    const accessPromises = categoryId.map((categoryId) => {
       return Access.create({
         categoryId: categoryId,
         userId: userId,
       });
     });
-
+  
     // Wait for all access records to be created
     await Promise.all(accessPromises);
-
+  
+    // Step 4: Respond with success message
     res.status(httpStatus.CREATED).json({
       message: "Access created successfully for the specified category IDs.",
     });
   }),
+  
+  
 };
 
 module.exports = {

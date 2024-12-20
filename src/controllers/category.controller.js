@@ -82,35 +82,33 @@ const getCategories = catchAsync(async (req, res) => {
   res.status(httpStatus.OK).send(categories);
 });
 
-
-
 const getCategoriesWithAccessStatus = catchAsync(async (req, res) => {
   try {
     let query = {};
     let categoriesWithAccessStatus = [];
 
     // Get userId from params or use req.user if available
-    let { userId } = req.params;
-    if (req.user) {
-      userId = req.user.id;
-    }
+    let { userId } = req.query;
 
     // Ensure userId is provided
     if (!userId) {
-      return res.status(httpStatus.BAD_REQUEST).send({ message: "User ID is required" });
+      return res
+        .status(httpStatus.BAD_REQUEST)
+        .send({ message: "User ID is required" });
     }
 
     // Fetch access data for the user
-    const accessData = await Access.find({ userId }).select("categoryId");
-    const accessCategoryIds = accessData.map((a) => a.categoryId.toString()); // Convert to string IDs
 
+    const accessData = await Access.find({ userId });
+    const accessCategoryIds = accessData.map((a) => a.categoryId.toString()); // Convert to string IDs
     // Fetch all categories
     const categories = await Category.find(query);
-
     // Map categories to include hasAccess status
     categoriesWithAccessStatus = categories.map((category) => {
       // Ensure the comparison is done properly
-      const hasAccess = accessCategoryIds.some((accessId) => accessId === category._id.toString());
+      const hasAccess = accessCategoryIds.some(
+        (accessId) => accessId === category._id.toString()
+      );
 
       return {
         ...category.toObject(),
@@ -121,20 +119,19 @@ const getCategoriesWithAccessStatus = catchAsync(async (req, res) => {
     // Send the response with the fetched categories and access status
     return res.status(httpStatus.OK).send(categoriesWithAccessStatus);
   } catch (error) {
-    console.error('Error fetching categories with access status:', error);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({ message: 'Internal server error' });
+    console.error("Error fetching categories with access status:", error);
+    return res
+      .status(httpStatus.INTERNAL_SERVER_ERROR)
+      .send({ message: "Internal server error" });
   }
 });
-
-
-
-
-
 
 const deleteCategory = catchAsync(async (req, res) => {
   const category = await Category.findById(req.params._id);
   if (!category) {
-    return res.status(httpStatus.NOT_FOUND).send({ message: "Category not found" });
+    return res
+      .status(httpStatus.NOT_FOUND)
+      .send({ message: "Category not found" });
   }
 
   await category.remove();

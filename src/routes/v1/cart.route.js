@@ -6,7 +6,7 @@ const { cartController } = require('../../controllers');
 
 const router = express.Router();
 
-router.post('/add-contact', auth(), catchAsync(cartController.addItemToCart));
+router.post('/add', auth(), catchAsync(cartController.addItemToCart));
 router.get('/', auth(), catchAsync(cartController.getCart));
 router.get('/getAll', auth(), catchAsync(cartController.getAllCart));
 router.put('/update', auth(), catchAsync(cartController.updateCartItem));
