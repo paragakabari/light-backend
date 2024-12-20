@@ -109,7 +109,9 @@ const getCategoriesWithAccessStatus = catchAsync(async (req, res) => {
 
     // Map categories to include hasAccess status
     categoriesWithAccessStatus = categories.map((category) => {
-      const hasAccess = accessCategoryIds.includes(category._id.toString()); // Compare as strings
+      // Ensure the comparison is done properly
+      const hasAccess = accessCategoryIds.some((accessId) => accessId === category._id.toString());
+
       return {
         ...category.toObject(),
         hasAccess, // True or false
@@ -117,10 +119,10 @@ const getCategoriesWithAccessStatus = catchAsync(async (req, res) => {
     });
 
     // Send the response with the fetched categories and access status
-    res.status(httpStatus.OK).send(categoriesWithAccessStatus);
+    return res.status(httpStatus.OK).send(categoriesWithAccessStatus);
   } catch (error) {
-    console.error("Error fetching categories with access status:", error);
-    res.status(httpStatus.INTERNAL_SERVER_ERROR).send({ message: "An error occurred" });
+    console.error('Error fetching categories with access status:', error);
+    return res.status(httpStatus.INTERNAL_SERVER_ERROR).send({ message: 'Internal server error' });
   }
 });
 
