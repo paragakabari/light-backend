@@ -85,36 +85,45 @@ const getCategories = catchAsync(async (req, res) => {
 
 
 const getCategoriesWithAccessStatus = catchAsync(async (req, res) => {
-  let query = {};
-  let categoriesWithAccessStatus = [];
+  try {
+    let query = {};
+    let categoriesWithAccessStatus = [];
 
-  // Get userId from query or use req.user if available
-  let { userId } = req.params;
-  console.log(userId);
-  if (req.user) {
-    userId = req.user.id;
+    // Get userId from params or use req.user if available
+    let { userId } = req.params;
+    if (req.user) {
+      userId = req.user.id;
+    }
+
+    // Ensure userId is provided
+    if (!userId) {
+      return res.status(httpStatus.BAD_REQUEST).send({ message: "User ID is required" });
+    }
+
+    // Fetch access data for the user
+    const accessData = await Access.find({ userId }).select("categoryId");
+    const accessCategoryIds = accessData.map((a) => a.categoryId.toString()); // Convert to string IDs
+
+    // Fetch all categories
+    const categories = await Category.find(query);
+
+    // Map categories to include hasAccess status
+    categoriesWithAccessStatus = categories.map((category) => {
+      const hasAccess = accessCategoryIds.includes(category._id.toString()); // Compare as strings
+      return {
+        ...category.toObject(),
+        hasAccess, // True or false
+      };
+    });
+
+    // Send the response with the fetched categories and access status
+    res.status(httpStatus.OK).send(categoriesWithAccessStatus);
+  } catch (error) {
+    console.error("Error fetching categories with access status:", error);
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).send({ message: "An error occurred" });
   }
-
-  // Fetch access data for the user
-  const accessData = await Access.find({ userId })
-    .select("categoryId")
-    .then((access) => access.map((a) => a.categoryId.toString()));  // Store access data as string IDs
-
-  // Fetch all categories
-  const categories = await Category.find(query);
-
-  // Add `hasAccess: true` if the user has access, otherwise `hasAccess: false`
-  categoriesWithAccessStatus = categories.map((category) => {
-    const hasAccess = accessData.includes(category._id.toString());  // Check if category is in accessData
-    return {
-      ...category.toObject(),
-      hasAccess,  // Set hasAccess to true or false
-    };
-  });
-
-  // Send the response with the fetched categories and access status
-  res.status(httpStatus.OK).send(categoriesWithAccessStatus);
 });
+
 
 
 
