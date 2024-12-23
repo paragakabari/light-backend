@@ -119,7 +119,6 @@ const getProducts = catchAsync(async (req, res) => {
     .select("categoryId")
     .then((access) => access.map((a) => a.categoryId));
 
-  console.log(accessData);
 
   // Base query: isActive products
   let query = {

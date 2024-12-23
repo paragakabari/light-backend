@@ -10,7 +10,7 @@ router.get('/get', auth(), catchAsync(userController.getUser));
 router.put('/update-status/:_id', auth(), catchAsync(userController.updateStatus.handler));
 router.post('/forgot-password', catchAsync(userController.forgotPassword));
 router.post('/reset-password/:token', catchAsync(userController.resetPassword));
-
+router.post('/verify-reset-token/:token', catchAsync(userController.verifyResetToken));
 
 
 module.exports = router;
